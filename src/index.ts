@@ -62,4 +62,7 @@ app.listen(4000, () => {
     console.log(`Service running on PORT 4000`)
 })
 
+app.get("/test", (req, res) => {
+    return res.status(200).json("Testing")
+})
 export default app;
