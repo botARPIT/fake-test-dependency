@@ -1,44 +1,51 @@
-name: CD - Deploy to Staging
+name: CD – Deploy to Staging
 
-on: 
+on:
   push:
-    branches: [main]
-  
+    branches: [ main ]
+
 jobs:
   deploy-staging:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout to the code branches
+      # 1. Checkout source (needed to build Docker image)
+      - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Setup a docker build
+
+      # 2. Set up Docker build environment
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to docker hub
+      # 3. Log in to Docker Hub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
-        with: 
-          username: ${{secrets.DOCKERHUB_USERNAME}}
-          password: ${{secrets.DOCKERHUB_TOKEN}}
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 4. Build and push Docker image (tagged with git SHA)
       - name: Build and push Docker image
         run: |
-          IMAGE_TAG=${GITHUB_SHA}
-          docker build -t bhoottester/fake-dependency-test:${IMAGE_TAG} .
-          docker push bhoottester/fake-dependency-test:${IMAGE_TAG}
+          IMAGE=bhoottester/fake-dependency-test:${GITHUB_SHA}
+          docker build -t $IMAGE .
+          docker push $IMAGE
 
+      # 5. Export image name so SSH step can use it
+      - name: Set image env for deploy
+        run: echo "IMAGE=bhoottester/fake-dependency-test:${GITHUB_SHA}" >> $GITHUB_ENV
+
+      # 6. Deploy to staging EC2 via SSH
       - name: Deploy to staging EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.STAGING_SSH_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
-          envs: GITHUB_SHA
+          envs: IMAGE
           script: |
             set -e
 
-            IMAGE=bhoottester/fake-dependency-test:${GITHUB_SHA}
-            
             echo "Deploying image: $IMAGE"
 
             docker pull $IMAGE
