@@ -2,15 +2,18 @@ import pino from 'pino';
 import type { RequestHandler } from 'express';
 import { randomUUID } from 'node:crypto'
 import { pinoHttp } from 'pino-http';
-const logger = pino({
-	transport: {
-		target: 'pino-pretty',
-		options: {
-			colourize: true,
-			translateTime: 'SYS:standard'
+import { config } from 'dotenv';
+config()
+const logger = pino(
+	process.env.NODE_ENV === "production" ? {} : {
+		transport: {
+			target: 'pino-pretty',
+			options: {
+				colourize: true,
+				translateTime: 'SYS:standard'
+			}
 		}
-	}
-})
+	})
 
 const httpLogger: RequestHandler = pinoHttp({
 	logger,
