@@ -1,0 +1,50 @@
+name: CD - Deploy to Staging
+
+on: 
+  push:
+    branches: [main]
+  
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the code branches
+        uses: actions/checkout@v4
+      
+      - name: Setup a docker build
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to docker hub
+        uses: docker/login-action@v3
+        with: 
+          username: ${{secrets.DOCKERHUB_USERNAME}}
+          password: ${{secrets.DOCKERHUB_TOKEN}}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          docker build -t bhoottester/fake-dependency-test:${IMAGE_TAG} .
+          docker push bhoottester/fake-dependency-test:${IMAGE_TAG}
+
+      - name: Deploy to staging EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -e
+
+            IMAGE=bhoottester/fake-dependency-test:${GITHUB_SHA}
+
+            docker pull $IMAGE
+
+            docker stop fake-dependency-staging || true
+            docker rm fake-dependency-staging || true
+
+            docker run -d \
+              --name fake-dependency-staging \
+              -p 3005:4000 \
+              -e NODE_ENV=staging \
+              $IMAGE

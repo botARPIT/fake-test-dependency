@@ -1,7 +1,8 @@
 // Simulate a 4 scenarios of the server healthy, slow, error, infinite time taking resource
 import express from 'express'
+import type { Express } from 'express';
 import { httpLogger, logger } from './logger.js';
-const app = express()
+const app: Express = express()
 app.use(express.json())
 app.use(httpLogger)
 
@@ -48,6 +49,10 @@ app.get("/external/data", async (req, res) => {
     }
 })
 
+app.get("/health", (req, res) => {
+
+    return res.status(200).json({ "message": "OK" })
+})
 
 async function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
@@ -56,3 +61,8 @@ async function sleep(ms: number) {
 app.listen(4000, () => {
     console.log(`Service running on PORT 4000`)
 })
+
+app.get("/test", (req, res) => {
+    return res.status(200).json("Testing")
+})
+export default app;

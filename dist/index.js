@@ -37,10 +37,14 @@ app.get("/external/data", async (req, res) => {
             return;
     }
 });
+app.get("/health", (req, res) => {
+    res.status(200).json({ "message": "OK" });
+});
 async function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 app.listen(4000, () => {
     console.log(`Service running on PORT 4000`);
 });
+export default app;
 //# sourceMappingURL=index.js.map
