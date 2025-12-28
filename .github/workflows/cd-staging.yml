@@ -33,10 +33,13 @@ jobs:
           host: ${{ secrets.STAGING_SSH_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
+          envs: GITHUB_SHA
           script: |
             set -e
 
             IMAGE=bhoottester/fake-dependency-test:${GITHUB_SHA}
+            
+            echo "Deploying image: $IMAGE"
 
             docker pull $IMAGE
 
