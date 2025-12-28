@@ -51,7 +51,7 @@ app.get("/external/data", async (req, res) => {
 
 app.get("/health", (req, res) => {
 
-    return res.status(201).json({ "message": "OK" })
+    return res.status(200).json({ "message": "OK" })
 })
 
 async function sleep(ms: number) {
